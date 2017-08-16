@@ -1,0 +1,10 @@
+language: ruby
+sudo: false
+cache: bundler
+
+rvm:
+  - 2.4.1
+  - 2.3.4
+
+gemfile:
+  - Gemfile
