@@ -23,7 +23,7 @@ module Frankenstein
   #     stats_server.run   # We are now serving stats on port 8080!
   #     counter = stats_server.registry.counter(:seconds_count, "Number of seconds")
   #     # Give the counter something to count
-  #     loop { counter.increment({}) }
+  #     loop { sleep 1; counter.increment({}) }
   #
   # Now if you hit http://localhost:8080/metrics you should see a counter
   # gradually going up, along with stats about the Frankenstein HTTP server
