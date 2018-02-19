@@ -8,6 +8,7 @@ require 'rack/handler/webrick'
 require 'rack/deflater'
 
 require 'frankenstein/error'
+require 'frankenstein/server/webrick_logger'
 
 module Frankenstein
   # A straightforward Prometheus metrics server.
@@ -65,7 +66,7 @@ module Frankenstein
       @op_cv    = ConditionVariable.new
     end
 
-    # Start the server instance running.
+    # Start the server instance running in a separate thread.
     #
     # This method returns once the server is just about ready to start serving
     # requests.
@@ -76,11 +77,22 @@ module Frankenstein
 
         @server_thread = Thread.new do
           @op_mutex.synchronize do
-            @server = WEBrick::HTTPServer.new(Logger: @logger, BindAddress: nil, Port: @port)
-            @server.mount "/", Rack::Handler::WEBrick, app
-            @op_cv.signal
+            begin
+              wrapped_logger = Frankenstein::Server::WEBrickLogger.new(logger: @logger)
+              @server = WEBrick::HTTPServer.new(Logger: wrapped_logger, BindAddress: nil, Port: @port, AccessLog: [[wrapped_logger, WEBrick::AccessLog::COMMON_LOG_FORMAT]])
+              @server.mount "/", Rack::Handler::WEBrick, app
+            rescue => ex
+              @logger.fatal("Frankenstein::Server#run") { (["Exception while trying to create WEBrick::HTTPServer: #{ex.message} (#{ex.class})"] + ex.backtrace).join("\n  ") }
+            ensure
+              @op_cv.signal
+            end
           end
-          @server.start
+
+          begin
+            @server.start if @server
+          rescue => ex
+            @logger.fatal("Frankenstein::Server#run") { (["Exception while running WEBrick::HTTPServer: #{ex.message} (#{ex.class})"] + ex.backtrace).join("\n  ") }
+          end
         end
       end
 
