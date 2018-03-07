@@ -20,7 +20,7 @@ describe Frankenstein::Server do
   end
 
   it "fires up webrick" do
-    expect(WEBrick::HTTPServer).to receive(:new).with(Logger: instance_of(Logger), BindAddress: nil, Port: 8080).and_return(mock_server = double(WEBrick::HTTPServer))
+    expect(WEBrick::HTTPServer).to receive(:new).with(Logger: instance_of(Frankenstein::Server::WEBrickLogger), BindAddress: nil, Port: 8080, AccessLog: instance_of(Array)).and_return(mock_server = double(WEBrick::HTTPServer))
     expect(mock_server).to receive(:mount).with("/", Rack::Handler::WEBrick, instance_of(Rack::Deflater))
     expect(mock_server).to receive(:start)
     expect(mock_server).to receive(:shutdown)
@@ -32,7 +32,7 @@ describe Frankenstein::Server do
     let(:server) { Frankenstein::Server.new(port: 1337) }
 
     it "fires up webrick with a different port" do
-      expect(WEBrick::HTTPServer).to receive(:new).with(Logger: instance_of(Logger), BindAddress: nil, Port: 1337).and_return(mock_server = double(WEBrick::HTTPServer))
+      expect(WEBrick::HTTPServer).to receive(:new).with(Logger: instance_of(Frankenstein::Server::WEBrickLogger), BindAddress: nil, Port: 1337, AccessLog: instance_of(Array)).and_return(mock_server = double(WEBrick::HTTPServer))
       expect(mock_server).to receive(:mount).with("/", Rack::Handler::WEBrick, instance_of(Rack::Deflater))
       expect(mock_server).to receive(:start)
       expect(mock_server).to receive(:shutdown)
@@ -46,7 +46,8 @@ describe Frankenstein::Server do
     let(:server) { Frankenstein::Server.new(logger: mock_logger) }
 
     it "fires up webrick with a different logger" do
-      expect(WEBrick::HTTPServer).to receive(:new).with(Logger: mock_logger, BindAddress: nil, Port: 8080).and_return(mock_server = double(WEBrick::HTTPServer))
+      expect(Frankenstein::Server::WEBrickLogger).to receive(:new).with(logger: mock_logger).and_return(mock_webrick_logger = double(Frankenstein::Server::WEBrickLogger))
+      expect(WEBrick::HTTPServer).to receive(:new).with(Logger: mock_webrick_logger, BindAddress: nil, Port: 8080, AccessLog: instance_of(Array)).and_return(mock_server = double(WEBrick::HTTPServer))
       expect(mock_server).to receive(:mount).with("/", Rack::Handler::WEBrick, instance_of(Rack::Deflater))
       expect(mock_server).to receive(:start)
       expect(mock_server).to receive(:shutdown)
