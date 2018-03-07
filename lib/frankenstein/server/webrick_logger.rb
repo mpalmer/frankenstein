@@ -39,8 +39,13 @@ module Frankenstein
       end
 
       %i{debug error fatal info warn}.each do |sev|
-        define_method(sev) do |msg, &blk|
-          if blk
+        define_method(sev) do |msg = nil, &blk|
+          if msg && blk
+            # This never happens in webrick now, but they might get the memo
+            # one day
+            @logger.__send__(sev, msg, &blk)
+          elsif blk
+            # I can't find any of these, either, but I live in hope
             @logger.__send__(sev, @progname, &blk)
           else
             @logger.__send__(sev, @progname) { msg }
@@ -48,6 +53,11 @@ module Frankenstein
         end
       end
 
+      # Simulate the "append literal message" feature
+      #
+      # Nothing goes into *my* logs without having appropriate metadata attached,
+      # so this just funnels these messages into the proper priority-based system.
+      #
       def <<(msg)
         @logger.add(@priority, msg, @progname)
       end

@@ -82,7 +82,9 @@ module Frankenstein
               @server = WEBrick::HTTPServer.new(Logger: wrapped_logger, BindAddress: nil, Port: @port, AccessLog: [[wrapped_logger, WEBrick::AccessLog::COMMON_LOG_FORMAT]])
               @server.mount "/", Rack::Handler::WEBrick, app
             rescue => ex
+              #:nocov:
               @logger.fatal("Frankenstein::Server#run") { (["Exception while trying to create WEBrick::HTTPServer: #{ex.message} (#{ex.class})"] + ex.backtrace).join("\n  ") }
+              #:nocov:
             ensure
               @op_cv.signal
             end
@@ -91,7 +93,9 @@ module Frankenstein
           begin
             @server.start if @server
           rescue => ex
+            #:nocov:
             @logger.fatal("Frankenstein::Server#run") { (["Exception while running WEBrick::HTTPServer: #{ex.message} (#{ex.class})"] + ex.backtrace).join("\n  ") }
+            #:nocov:
           end
         end
       end
