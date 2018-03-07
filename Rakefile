@@ -1,8 +1,9 @@
 exec(*(["bundle", "exec", $PROGRAM_NAME] + ARGV)) if ENV['BUNDLE_GEMFILE'].nil?
 
 task default: :test
-task default: :rubocop
-task default: :doc_stats
+
+desc "Ensure everything is a-OK"
+task test: [:spec, :rubocop, :doc_stats]
 
 begin
   Bundler.setup(:default, :development)
@@ -14,10 +15,12 @@ end
 
 Bundler::GemHelper.install_tasks
 
+desc "Run rubocop"
 task :rubocop do
   sh "rubocop"
 end
 
+desc "Make a new release"
 task :release do
   sh "git release"
 end
@@ -28,6 +31,7 @@ YARD::Rake::YardocTask.new :doc do |yardoc|
   yardoc.files = %w{lib/**/*.rb - README.md CONTRIBUTING.md CODE_OF_CONDUCT.md}
 end
 
+desc "Display documentation coverage statistics"
 task :doc_stats do
   system("yard stats --list-undoc")
 end
@@ -38,6 +42,6 @@ task :guard do
 end
 
 require 'rspec/core/rake_task'
-RSpec::Core::RakeTask.new :test do |t|
+RSpec::Core::RakeTask.new :spec do |t|
   t.pattern = "spec/**/*_spec.rb"
 end
