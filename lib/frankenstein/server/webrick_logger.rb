@@ -53,6 +53,14 @@ module Frankenstein
         end
       end
 
+      # Proxy the severity query methods too, because WEBrick likes to check
+      # those directly for... reasons.
+      %i{debug? error? fatal? info? warn?}.each do |sevp|
+        defined_method(sevp) do
+          @logger.__send__(sevp)
+        end
+      end
+
       # Simulate the "append literal message" feature
       #
       # Nothing goes into *my* logs without having appropriate metadata attached,
