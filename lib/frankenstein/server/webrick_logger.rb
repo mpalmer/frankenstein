@@ -56,7 +56,7 @@ module Frankenstein
       # Proxy the severity query methods too, because WEBrick likes to check
       # those directly for... reasons.
       %i{debug? error? fatal? info? warn?}.each do |sevp|
-        defined_method(sevp) do
+        define_method(sevp) do
           @logger.__send__(sevp)
         end
       end
