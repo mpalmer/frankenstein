@@ -30,7 +30,7 @@ Gem::Specification.new do |s|
   # prometheus-client provides no guaranteed backwards compatibility,
   # and in fact happily breaks things with no notice, so we're stuck
   # with hard-coding a specific version to avoid unexpected disaster.
-  s.add_runtime_dependency "prometheus-client", "0.7.1"
+  s.add_runtime_dependency "prometheus-client", "0.8.0"
   s.add_runtime_dependency "rack", "~> 2.0"
 
   s.add_development_dependency 'bundler'
