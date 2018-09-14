@@ -38,6 +38,13 @@ describe Frankenstein::Server::WEBrickLogger do
         end
       end
     end
+
+    describe "##{sev}?" do
+      it "delegates to the logger" do
+        expect(mock_logger).to receive(:"#{sev}?")
+        webrick_logger.__send__(:"#{sev}?")
+      end
+    end
   end
 
   describe "#<<" do
