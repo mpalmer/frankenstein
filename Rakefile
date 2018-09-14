@@ -17,7 +17,7 @@ Bundler::GemHelper.install_tasks
 
 desc "Run rubocop"
 task :rubocop do
-  sh "rubocop"
+  sh "rubocop --fail-level R"
 end
 
 desc "Make a new release"
