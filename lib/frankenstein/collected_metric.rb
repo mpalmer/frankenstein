@@ -67,7 +67,7 @@ module Frankenstein
     #
     # @param type [Symbol] what type of metric you're returning.  It's uncommon
     #   to want anything other than `:gauge` here (the default), because
-    #   when you're collecting external data it's uncommon to be able to
+    #   when you're collecting external data it's unlikely you'll be able to
     #   trust that your external data source will behave like a proper
     #   counter (or histogram or summary), but if you want the flexibility,
     #   it's there for you.  If you do decide to try your hand at collecting
