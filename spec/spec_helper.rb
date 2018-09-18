@@ -9,6 +9,7 @@ SimpleCov.start
 RSpec.configure do |config|
   config.fail_fast = true
   #config.full_backtrace = true
+  config.order = :random
 
   config.expect_with :rspec do |c|
     c.syntax = :expect
