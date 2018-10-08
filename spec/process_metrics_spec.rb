@@ -29,7 +29,7 @@ describe Frankenstein::ProcessMetrics do
 
     before :each do
       allow(File).to receive(:exist?).with("/proc/12345/stat").and_return(true)
-      allow(File).to receive(:open).with("/proc/12345/stat") { StringIO.new(proc_stat_data) }
+      allow(File).to receive(:read).with("/proc/12345/stat").and_return(proc_stat_data)
     end
 
     it "gets registered" do
@@ -120,7 +120,7 @@ describe Frankenstein::ProcessMetrics do
 
     before :each do
       allow(File).to receive(:exist?).with("/proc/12345/stat").and_return(true)
-      allow(File).to receive(:open).with("/proc/12345/stat") { StringIO.new(proc_stat_data) }
+      allow(File).to receive(:read).with("/proc/12345/stat").and_return(proc_stat_data)
     end
 
     it "gets registered" do
@@ -180,7 +180,7 @@ describe Frankenstein::ProcessMetrics do
 
     before :each do
       allow(File).to receive(:exist?).with("/proc/12345/stat").and_return(true)
-      allow(File).to receive(:open).with("/proc/12345/stat") { StringIO.new(proc_stat_data) }
+      allow(File).to receive(:read).with("/proc/12345/stat").and_return(proc_stat_data)
     end
 
     it "gets registered" do

@@ -27,17 +27,17 @@ module Frankenstein
 
       if File.exist?(stat_file)
         Frankenstein::CollectedMetric.new(:process_cpu_seconds_total, "Total user and system CPU time spent in seconds", registry: registry, logger: logger) do
-          stats = File.open(stat_file).read.split(" ")
+          stats = File.read(stat_file).split(" ")
           { { mode: "user" } => stats[13].to_f / hz, { mode: "system" } => stats[14].to_f / hz }
         end
 
         Frankenstein::CollectedMetric.new(:process_virtual_memory_bytes, "Virtual memory size in bytes", registry: registry, logger: logger) do
-          stats = File.open(stat_file).read.split(" ")
+          stats = File.read(stat_file).split(" ")
           { {} => stats[22].to_i }
         end
 
         Frankenstein::CollectedMetric.new(:process_resident_memory_bytes, "Resident memory size in bytes", registry: registry, logger: logger) do
-          stats = File.open(stat_file).read.split(" ")
+          stats = File.read(stat_file).split(" ")
           { {} => stats[23].to_i * page_size }
         end
       end
