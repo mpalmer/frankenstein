@@ -78,7 +78,7 @@ module Frankenstein
         @server_thread = Thread.new do
           @op_mutex.synchronize do
             begin
-              wrapped_logger = Frankenstein::Server::WEBrickLogger.new(logger: @logger)
+              wrapped_logger = Frankenstein::Server::WEBrickLogger.new(logger: @logger, progname: "Frankenstein::Server")
               @server = WEBrick::HTTPServer.new(Logger: wrapped_logger, BindAddress: nil, Port: @port, AccessLog: [[wrapped_logger, WEBrick::AccessLog::COMMON_LOG_FORMAT]])
               @server.mount "/", Rack::Handler::WEBrick, app
             rescue => ex
