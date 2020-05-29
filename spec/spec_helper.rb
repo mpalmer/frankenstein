@@ -7,13 +7,13 @@ require 'simplecov'
 SimpleCov.start
 
 RSpec.configure do |config|
-  config.fail_fast = true
-  #config.full_backtrace = true
-  config.order = :random
+	config.fail_fast = ENV.key?("RSPEC_CONFIG_FAIL_FAST")
+	config.full_backtrace = ENV.key?("RSPEC_CONFIG_FULL_BACKTRACE")
+	config.order = :random
 
-  config.expect_with :rspec do |c|
-    c.syntax = :expect
-  end
+	config.expect_with :rspec do |c|
+		c.syntax = :expect
+	end
 end
 
 Thread.abort_on_exception = true

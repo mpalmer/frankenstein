@@ -65,17 +65,25 @@ module Frankenstein
     #   It should be a singular and indefinite noun phrase, to maximise the
     #   chances that it will fit neatly into the generated description text.
     #
+    # @param labels [Array<Symbol>] the names of the labels that will be
+    #   set on most of the metrics created by this instance.
+    #
+    # @param duration_labels [Array<Symbol>] the names of the labels which will
+    #   be set on the `_duration_seconds` histogram.  By default, the value
+    #   of the `labels` parameter will be used, but if you want to have a separate
+    #   label set for your duration histogram, this is what you want.
+    #
     # @param registry [Prometheus::Client::Registry] the client registry in
     #   which all the metrics will be created.  The default will put all the
     #   metrics in the Prometheus Client's default registry, which may or may
     #   not be what you're up for.  If you're using Frankenstein::Server, you
     #   want `stats_server.registry`.
     #
-    def initialize(prefix, outgoing: true, description: prefix, registry: Prometheus::Client.registry)
-      @requests   = registry.counter(:"#{prefix}_requests_total", "Number of #{description} requests #{outgoing ? 'sent' : 'received'}")
-      @durations  = registry.histogram(:"#{prefix}_request_duration_seconds", "Time taken to #{outgoing ? 'receive' : 'send'} a #{description} response")
-      @exceptions = registry.counter(:"#{prefix}_exceptions_total", "Number of exceptions raised by the #{description} code")
-      @current    = registry.gauge(:"#{prefix}_in_progress_count", "Number of #{description} requests currently in progress")
+    def initialize(prefix, labels: [], duration_labels: nil, outgoing: true, description: prefix, registry: Prometheus::Client.registry)
+      @requests   = registry.counter(:"#{prefix}_requests_total", docstring: "Number of #{description} requests #{outgoing ? 'sent' : 'received'}", labels: labels)
+      @durations  = registry.histogram(:"#{prefix}_request_duration_seconds", docstring: "Time taken to #{outgoing ? 'receive' : 'send'} a #{description} response", labels: duration_labels || labels)
+      @exceptions = registry.counter(:"#{prefix}_exceptions_total", docstring: "Number of exceptions raised by the #{description} code", labels: labels + [:class])
+      @current    = registry.gauge(:"#{prefix}_in_progress_count", docstring: "Number of #{description} requests currently in progress", labels: labels)
 
       # Prometheus::Client::Gauge doesn't (yet) have a built-in way to
       # atomically "adjust" a gauge, only get the current value and set a
@@ -149,7 +157,7 @@ module Frankenstein
     #   have the same set of labels.  If you fail to do this, an exception
     #   will be raised by Prometheus after the block is executed.
     #
-    # @raise [Prometheus::Request::NoBlockError] if you didn't pass a block to
+    # @raise [Frankenstein::Request::NoBlockError] if you didn't pass a block to
     #   call.  There's nothing to instrument!
     #
     # @raise [Prometheus::Client::LabelSetValidator::LabelSetError] if you
@@ -170,21 +178,21 @@ module Frankenstein
           "No block passed to #{self.class}#measure"
       end
 
-      @requests.increment(labels, 1)
-      @mutex.synchronize { @current.set(labels, (@current.get(labels) || 0) + 1) }
+      @requests.increment(labels: labels)
+      @mutex.synchronize { @current.set((@current.get(labels: labels) || 0) + 1, labels: labels) }
 
       res_labels = labels.dup
 
       begin
         yield(res_labels).tap do
           elapsed_time = Time.now - start_time
-          @durations.observe(res_labels, elapsed_time)
+          @durations.observe(elapsed_time, labels: res_labels)
         end
       rescue Exception => ex
-        @exceptions.increment(labels.merge(class: ex.class.to_s), 1)
+        @exceptions.increment(labels: labels.merge(class: ex.class.to_s))
         raise
       ensure
-        @mutex.synchronize { @current.set(labels, @current.get(labels) - 1) }
+        @mutex.synchronize { @current.set(@current.get(labels: labels) - 1, labels: labels) }
       end
     end
   end

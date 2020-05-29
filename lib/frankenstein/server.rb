@@ -125,9 +125,7 @@ module Frankenstein
         builder.use Rack::Deflater, if: ->(_, _, _, body) { body.any? && body[0].length > 512 }
         builder.use Prometheus::Middleware::Collector,
           registry: @registry,
-          metrics_prefix: @metrics_prefix,
-          counter_label_builder: ->(_, _) { {} },
-          duration_label_builder: ->(_, _) { {} }
+          metrics_prefix: @metrics_prefix
         builder.use Prometheus::Middleware::Exporter, registry: @registry
         builder.run ->(_) { [301, { 'Location' => "/metrics", 'Content-Type' => 'text/plain' }, ["Try /metrics"]] }
         builder.to_app

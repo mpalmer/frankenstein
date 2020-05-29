@@ -15,7 +15,7 @@ module Frankenstein
     #
     def self.register(registry = Prometheus::Client.registry)
       GC.stat.each do |k, v|
-        Frankenstein::CollectedMetric.new(:"ruby_gc_#{k}", "Ruby GC parameter #{k}", registry: registry) do
+        Frankenstein::CollectedMetric.new(:"ruby_gc_#{k}", docstring: "Ruby GC parameter #{k}", registry: registry) do
           { {} => GC.stat[k] }
         end
       end

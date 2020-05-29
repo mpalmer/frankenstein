@@ -18,7 +18,7 @@ module Frankenstein
     # @param logger [Logger] where to log any problems which some sort of
     #
     def self.register(registry = Prometheus::Client.registry, logger: Logger.new("/dev/null"))
-      registry.gauge(:process_start_time_seconds, "Start time of the process since unix epoch in seconds").set({}, Time.now.to_f)
+      registry.gauge(:process_start_time_seconds, docstring: "Start time of the process since unix epoch in seconds").set(Time.now.to_f)
 
       page_size = Etc.sysconf(Etc::SC_PAGESIZE)
       hz        = Etc.sysconf(Etc::SC_CLK_TCK)
@@ -26,17 +26,17 @@ module Frankenstein
       stat_file = "/proc/#{Process.pid}/stat".freeze
 
       if File.exist?(stat_file)
-        Frankenstein::CollectedMetric.new(:process_cpu_seconds_total, "Total user and system CPU time spent in seconds", registry: registry, logger: logger) do
+        Frankenstein::CollectedMetric.new(:process_cpu_seconds_total, docstring: "Total user and system CPU time spent in seconds", registry: registry, logger: logger, labels: [:mode]) do
           stats = File.read(stat_file).split(" ")
           { { mode: "user" } => stats[13].to_f / hz, { mode: "system" } => stats[14].to_f / hz }
         end
 
-        Frankenstein::CollectedMetric.new(:process_virtual_memory_bytes, "Virtual memory size in bytes", registry: registry, logger: logger) do
+        Frankenstein::CollectedMetric.new(:process_virtual_memory_bytes, docstring: "Virtual memory size in bytes", registry: registry, logger: logger) do
           stats = File.read(stat_file).split(" ")
           { {} => stats[22].to_i }
         end
 
-        Frankenstein::CollectedMetric.new(:process_resident_memory_bytes, "Resident memory size in bytes", registry: registry, logger: logger) do
+        Frankenstein::CollectedMetric.new(:process_resident_memory_bytes, docstring: "Resident memory size in bytes", registry: registry, logger: logger) do
           stats = File.read(stat_file).split(" ")
           { {} => stats[23].to_i * page_size }
         end
@@ -45,23 +45,23 @@ module Frankenstein
       fd_dir = "/proc/#{Process.pid}/fd".freeze
 
       if File.exist?(fd_dir)
-        Frankenstein::CollectedMetric.new(:process_open_fds, "Number of open file descriptors", registry: registry, logger: logger) do
+        Frankenstein::CollectedMetric.new(:process_open_fds, docstring: "Number of open file descriptors", registry: registry, logger: logger) do
           { {} => Dir["#{fd_dir}/*"].length }
         end
       end
 
       if Process.respond_to?(:getrlimit)
-        Frankenstein::CollectedMetric.new(:process_max_fds, "Maximum number of open file descriptors", registry: registry, logger: logger) do
+        Frankenstein::CollectedMetric.new(:process_max_fds, docstring: "Maximum number of open file descriptors", registry: registry, logger: logger) do
           { {} => Process.getrlimit(:NOFILE).first }
         end
 
-        Frankenstein::CollectedMetric.new(:process_virtual_memory_max_bytes, "Maximum amount of virtual memory available in bytes", registry: registry, logger: logger) do
+        Frankenstein::CollectedMetric.new(:process_virtual_memory_max_bytes, docstring: "Maximum amount of virtual memory available in bytes", registry: registry, logger: logger) do
           { {} => Process.getrlimit(:AS).first }
         end
       end
 
       if GC.respond_to?(:stat) && GC.stat[:heap_allocated_pages]
-        Frankenstein::CollectedMetric.new(:process_heap_bytes, "Process heap size in bytes", registry: registry, logger: logger) do
+        Frankenstein::CollectedMetric.new(:process_heap_bytes, docstring: "Process heap size in bytes", registry: registry, logger: logger) do
           { {} => GC.stat[:heap_allocated_pages] * page_size }
         end
       end

@@ -27,10 +27,7 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = ">= 2.3.0"
 
-  # prometheus-client provides no guaranteed backwards compatibility,
-  # and in fact happily breaks things with no notice, so we're stuck
-  # with hard-coding a specific version to avoid unexpected disaster.
-  s.add_runtime_dependency "prometheus-client", "0.8.0"
+  s.add_runtime_dependency "prometheus-client", "~> 2.0"
   s.add_runtime_dependency "rack", "~> 2.0"
 
   s.add_development_dependency 'bundler'

@@ -59,6 +59,6 @@ describe Frankenstein::Server do
   it "records stats for requests to /metrics" do
     10.times { get "/metrics" }
 
-    expect(server.registry.get(:frankenstein_server_requests_total).get).to eq(10)
+    expect(server.registry.get(:frankenstein_server_requests_total).get(labels: { code: "200", path: "/metrics", method: "get" })).to eq(10)
   end
 end

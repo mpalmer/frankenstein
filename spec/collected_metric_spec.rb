@@ -9,8 +9,9 @@ describe Frankenstein::CollectedMetric do
   let(:mock_logger) { double(Logger).tap { |l| allow(l).to receive(:debug) } }
   let(:metric_name) { :test_metric }
   let(:metric_docstring) { "A test metric" }
+  let(:metric_labels) { [] }
   let(:collector_proc) { Proc.new { value_set } }
-  let(:metric) { Frankenstein::CollectedMetric.new(metric_name, metric_docstring, logger: mock_logger, registry: mock_registry, &collector_proc) }
+  let(:metric) { Frankenstein::CollectedMetric.new(metric_name, docstring: metric_docstring, labels: metric_labels, logger: mock_logger, registry: mock_registry, &collector_proc) }
 
   before(:each) do
     allow(mock_registry).to receive(:register).with(instance_of(Frankenstein::CollectedMetric))
@@ -23,13 +24,13 @@ describe Frankenstein::CollectedMetric do
     end
 
     it "registers an errors metric" do
-      expect(mock_registry).to receive(:counter).with(:test_metric_collection_errors_total, instance_of(String))
+      expect(mock_registry).to receive(:counter).with(:test_metric_collection_errors_total, docstring: instance_of(String))
 
       metric
     end
 
     it "explodes if you give an invalid type" do
-      expect { Frankenstein::CollectedMetric.new(:bad_type, "Bad type", type: :lulz) }.to raise_error(ArgumentError)
+      expect { Frankenstein::CollectedMetric.new(:bad_type, docstring: "Bad type", type: :lulz) }.to raise_error(ArgumentError)
     end
   end
 
@@ -43,6 +44,7 @@ describe Frankenstein::CollectedMetric do
     end
 
     context "when the collector returns a populated value set" do
+      let(:metric_labels) { [:foo, :baz] }
       let(:value_set) do
         {
          { foo: "bar", baz: "wombat" } => 42,
@@ -56,6 +58,7 @@ describe Frankenstein::CollectedMetric do
     end
 
     context "when the collector returns data with varying label names" do
+      let(:metric_labels) { [:foo, :baz] }
       let(:value_set) do
         {
          { foo: "bar", baz: "wombat" } => 42,
@@ -138,6 +141,7 @@ describe Frankenstein::CollectedMetric do
 
   describe "#get" do
     context "with some values" do
+      let(:metric_labels) { [:foo, :baz] }
       let(:value_set) do
         {
          { foo: "bar", baz: "wombat" } => 42,

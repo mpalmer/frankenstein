@@ -15,7 +15,7 @@ module Frankenstein
     #
     def self.register(registry = Prometheus::Client.registry)
       RubyVM.stat.each do |k, v|
-        Frankenstein::CollectedMetric.new(:"ruby_vm_#{k}", "Ruby VM parameter #{k}", registry: registry) do
+        Frankenstein::CollectedMetric.new(:"ruby_vm_#{k}", docstring: "Ruby VM parameter #{k}", registry: registry) do
           { {} => RubyVM.stat[k] }
         end
       end

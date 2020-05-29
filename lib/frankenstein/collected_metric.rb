@@ -65,6 +65,9 @@ module Frankenstein
     #
     # @param docstring [#to_s] the descriptive help text for the metric.
     #
+    # @param labels [Array<Symbol>] the labels which all time series for this
+    #   metric must possess.
+    #
     # @param type [Symbol] what type of metric you're returning.  It's uncommon
     #   to want anything other than `:gauge` here (the default), because
     #   when you're collecting external data it's unlikely you'll be able to
@@ -87,8 +90,8 @@ module Frankenstein
     #
     # @param collector [Proc] the code to run on every scrape request.
     #
-    def initialize(name, docstring, type: :gauge, logger: Logger.new('/dev/null'), registry: Prometheus::Client.registry, &collector)
-      @validator = Prometheus::Client::LabelSetValidator.new
+    def initialize(name, docstring:, labels: [], type: :gauge, logger: Logger.new('/dev/null'), registry: Prometheus::Client.registry, &collector)
+      @validator = Prometheus::Client::LabelSetValidator.new(expected_labels: labels)
 
       validate_name(name)
       validate_docstring(docstring)
@@ -104,14 +107,14 @@ module Frankenstein
       @registry  = registry
       @collector = collector
 
-      @errors_metric = @registry.counter(:"#{@name}_collection_errors_total", "Errors encountered while collecting for #{@name}")
+      @errors_metric = @registry.counter(:"#{@name}_collection_errors_total", docstring: "Errors encountered while collecting for #{@name}")
       @registry.register(self)
     end
 
     # Retrieve the value for the given labelset.
     #
     def get(labels = {})
-      @validator.validate(labels)
+      @validator.validate_labelset!(labels)
 
       values[labels]
     end
@@ -126,7 +129,7 @@ module Frankenstein
             @errors_metric.increment(class: "NotAHashError")
             return {}
           end
-          results.keys.each { |labelset| @validator.validate(labelset) }
+          results.keys.each { |labelset| @validator.validate_labelset!(labelset) }
         end
       rescue StandardError => ex
         @logger.error(progname) { (["Exception in collection: #{ex.message} (#{ex.class})"] + ex.backtrace).join("\n  ") }
