@@ -46,7 +46,7 @@ describe Frankenstein::Server do
     let(:server) { Frankenstein::Server.new(logger: mock_logger) }
 
     it "fires up webrick with a different logger" do
-      expect(Frankenstein::Server::WEBrickLogger).to receive(:new).with(logger: mock_logger).and_return(mock_webrick_logger = double(Frankenstein::Server::WEBrickLogger))
+      expect(Frankenstein::Server::WEBrickLogger).to receive(:new).with(logger: mock_logger, progname: "Frankenstein::Server").and_return(mock_webrick_logger = double(Frankenstein::Server::WEBrickLogger))
       expect(WEBrick::HTTPServer).to receive(:new).with(Logger: mock_webrick_logger, BindAddress: nil, Port: 8080, AccessLog: instance_of(Array)).and_return(mock_server = double(WEBrick::HTTPServer))
       expect(mock_server).to receive(:mount).with("/", Rack::Handler::WEBrick, instance_of(Rack::Deflater))
       expect(mock_server).to receive(:start)
