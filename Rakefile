@@ -3,7 +3,7 @@ exec(*(["bundle", "exec", $PROGRAM_NAME] + ARGV)) if ENV['BUNDLE_GEMFILE'].nil?
 task default: :test
 
 desc "Ensure everything is a-OK"
-task test: [:spec, :rubocop, :doc_stats]
+task test: [:spec, :doc_stats]
 
 begin
   Bundler.setup(:default, :development)
@@ -14,11 +14,6 @@ rescue Bundler::BundlerError => e
 end
 
 Bundler::GemHelper.install_tasks
-
-desc "Run rubocop"
-task :rubocop do
-  sh "rubocop --fail-level R"
-end
 
 desc "Make a new release"
 task :release do
