@@ -66,41 +66,35 @@ module Frankenstein
       @op_cv    = ConditionVariable.new
     end
 
-    # Start the server instance running in a separate thread.
+    # Start the server instance running.
     #
-    # This method returns once the server is just about ready to start serving
-    # requests.
+    # This method will return only after `#shutdown` is called (presumably from
+    # another thread).
     #
     def run
       @op_mutex.synchronize do
         return AlreadyRunningError if @server
 
-        @server_thread = Thread.new do
-          @op_mutex.synchronize do
-            begin
-              wrapped_logger = Frankenstein::Server::WEBrickLogger.new(logger: @logger, progname: "Frankenstein::Server")
-              @server = WEBrick::HTTPServer.new(Logger: wrapped_logger, BindAddress: nil, Port: @port, AccessLog: [[wrapped_logger, WEBrick::AccessLog::COMMON_LOG_FORMAT]])
-              @server.mount "/", Rack::Handler::WEBrick, app
-            rescue => ex
-              #:nocov:
-              @logger.fatal("Frankenstein::Server#run") { (["Exception while trying to create WEBrick::HTTPServer: #{ex.message} (#{ex.class})"] + ex.backtrace).join("\n  ") }
-              #:nocov:
-            ensure
-              @op_cv.signal
-            end
-          end
-
-          begin
-            @server.start if @server
-          rescue => ex
-            #:nocov:
-            @logger.fatal("Frankenstein::Server#run") { (["Exception while running WEBrick::HTTPServer: #{ex.message} (#{ex.class})"] + ex.backtrace).join("\n  ") }
-            #:nocov:
-          end
+        begin
+          wrapped_logger = Frankenstein::Server::WEBrickLogger.new(logger: @logger, progname: "Frankenstein::Server")
+          @server = WEBrick::HTTPServer.new(Logger: wrapped_logger, BindAddress: nil, Port: @port, AccessLog: [[wrapped_logger, WEBrick::AccessLog::COMMON_LOG_FORMAT]])
+          @server.mount "/", Rack::Handler::WEBrick, app
+        rescue => ex
+          #:nocov:
+          @logger.fatal("Frankenstein::Server#run") { (["Exception while trying to create WEBrick::HTTPServer: #{ex.message} (#{ex.class})"] + ex.backtrace).join("\n  ") }
+          #:nocov:
+        ensure
+          @op_cv.signal
         end
       end
 
-      @op_mutex.synchronize { @op_cv.wait(@op_mutex) until @server }
+      begin
+        @server.start if @server
+      rescue => ex
+        #:nocov:
+        @logger.fatal("Frankenstein::Server#run") { (["Exception while running WEBrick::HTTPServer: #{ex.message} (#{ex.class})"] + ex.backtrace).join("\n  ") }
+        #:nocov:
+      end
     end
 
     # Terminate a running server instance.
@@ -112,8 +106,6 @@ module Frankenstein
         return nil if @server.nil?
         @server.shutdown
         @server = nil
-        @server_thread.join
-        @server_thread = nil
       end
     end
 
