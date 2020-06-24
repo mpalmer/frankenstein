@@ -80,10 +80,10 @@ module Frankenstein
     #   want `stats_server.registry`.
     #
     def initialize(prefix, labels: [], duration_labels: nil, outgoing: true, description: prefix, registry: Prometheus::Client.registry)
-      @requests   = registry.counter(:"#{prefix}_requests_total", docstring: "Number of #{description} requests #{outgoing ? 'sent' : 'received'}", labels: labels)
-      @durations  = registry.histogram(:"#{prefix}_request_duration_seconds", docstring: "Time taken to #{outgoing ? 'receive' : 'send'} a #{description} response", labels: duration_labels || labels)
-      @exceptions = registry.counter(:"#{prefix}_exceptions_total", docstring: "Number of exceptions raised by the #{description} code", labels: labels + [:class])
-      @current    = registry.gauge(:"#{prefix}_in_progress_count", docstring: "Number of #{description} requests currently in progress", labels: labels)
+      @requests   = registry.get(:"#{prefix}_requests_total")           || registry.counter(:"#{prefix}_requests_total", docstring: "Number of #{description} requests #{outgoing ? 'sent' : 'received'}", labels: labels)
+      @durations  = registry.get(:"#{prefix}_request_duration_seconds") || registry.histogram(:"#{prefix}_request_duration_seconds", docstring: "Time taken to #{outgoing ? 'receive' : 'send'} a #{description} response", labels: duration_labels || labels)
+      @exceptions = registry.get(:"#{prefix}_exceptions_total")         || registry.counter(:"#{prefix}_exceptions_total", docstring: "Number of exceptions raised by the #{description} code", labels: labels + [:class])
+      @current    = registry.get(:"#{prefix}_in_progress_count")        || registry.gauge(:"#{prefix}_in_progress_count", docstring: "Number of #{description} requests currently in progress", labels: labels)
 
       # Prometheus::Client::Gauge doesn't (yet) have a built-in way to
       # atomically "adjust" a gauge, only get the current value and set a
